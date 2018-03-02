@@ -15,6 +15,14 @@ namespace CueBoT
 {
     class Program
     {
+        const string MSG_ERRORE_GENERICO = "Comando non riconosciuto\nPremi su /aiuto per visualizzare la lista di comandi disponibili";
+        const string MSG_CREAZIONE_EVENTO_STEP1 = "Bene! per proseguire dimmi che nome vuoi assegnare all'evento";
+        const string MSG_CREAZIONE_EVENTO_STEP2 = "Grazie, ora per favore forniscimi una descrizione";
+        const string MSG_CREAZIONE_EVENTO_STEP3 = "Perfetto, allegami la posizione dell'evento";
+        const string MSG_CREAZIONE_EVENTO_STEP4 = "Ora inviami la data di inizio dell'evento, il formato deve essere GG/MM/YYYY";
+        const string MSG_CREAZIONE_EVENTO_STEP46ERR = "Non riesco a capire la data, per favore inseriscila nuovamente";
+        const string MSG_CREAZIONE_EVENTO_STEP5 = "Fantastico! Vuoi impostare anche la data di fine evento?";
+
         static SqliteConnection dbSqlite;
         static List<Stato> stati;
         static TelegramBotClient bot;
@@ -109,6 +117,7 @@ namespace CueBoT
                 case MessageType.Sticker:
                     break;
                 case MessageType.Location:
+                    await HandleLocation(message.From.Id, message.Location);
                     break;
                 case MessageType.Contact:
                     await HandleContact(message.From.Id, message.Contact);
@@ -157,7 +166,7 @@ namespace CueBoT
             {
                 if (text.Text.ToLower().StartsWith("/start"))
                 {
-                    bool UtenteRegistrato = IsEnabledCommand($"SELECT CASE WHEN EXISTS (SELECT * FROM Utenti WHERE Utenti.id_utente = '{text.From.Id}') THEN CAST (1 AS BIT) ELSE CAST (0 AS BIT) END");
+                    bool UtenteRegistrato = GetUtenteRegistrato(text.From.Id);
                     if (!UtenteRegistrato)
                     {
                         var user = stati.Find(a => a.UserId == text.From.Id);
@@ -177,12 +186,9 @@ namespace CueBoT
                         else
                             user.State = 1;
 
-                        var livelloAutorizzazioneUtente = AuthLevel($"SELECT id_auth FROM Utenti, Registrati WHERE Utenti.id_utente = {text.From.Id} AND Utenti.id_utente = Registrati.id_utente");
-                        //if (livelloAutorizzazioneUtente == -1)
-                        //Errore
-                        LivelloAuth livello = (LivelloAuth)livelloAutorizzazioneUtente;
+                        LivelloAuth livelloAutorizzazioneUtente = GetLivelloAutorizzazione(text.From.Id);
 
-                        switch (livello)
+                        switch (livelloAutorizzazioneUtente)
                         {
                             case LivelloAuth.Admin:
                                 //ADMIN
@@ -190,17 +196,87 @@ namespace CueBoT
                             case LivelloAuth.Sindaco:
                                 await bot.SendTextMessageAsync(text.From.Id, "⚙️<b>Per gestire il bot devi utilizzare i seguenti comandi:</b>\n• /creaevento - <i>Crea un evento</i>\n" +
                                             "• /eliminaevento - <i>Elimina un evento</i>\n" + "• /listaeventi - <i>Visualizza la lista degli eventi attivi</i>\n" +
-                                            "• /listavolontari - <i>Visualizza la lista dei volontari</i>\n" +
-                                            "• /aiuto - <i>Se hai bisogno di aiuto premi qui</i>", ParseMode.Html);
+                                            "• /listavolontari - <i>Visualizza la lista dei volontari</i>\n" + "• /aiuto - <i>Se hai bisogno di aiuto premi qui</i>", ParseMode.Html);
                                 break;
                             case LivelloAuth.Responsabile:
+                                await bot.SendTextMessageAsync(text.From.Id, "⚙️<b>Per gestire il bot devi utilizzare i seguenti comandi:</b>\n• /creapunto - <i>Crea un punto di controllo</i>\n" +
+                                            "• /eliminapunto - <i>Elimina un punto di controllo</i>\n" + "• /listapunti - <i>Visualizza la lista dei punti di controllo</i>\n" +
+                                            "• /listavolontari - <i>Visualizza la lista dei volontari dell'evento</i>\n" + "• /aiuto - <i>Se hai bisogno di aiuto premi qui</i>", ParseMode.Html);
                                 break;
                             case LivelloAuth.Volontario:
+                                //TODO
                                 break;
                             case LivelloAuth.Utente:
+                                //TODO
                                 break;
                             default:
                                 break;
+                        }
+                    }
+                }
+                else if (text.Text.ToLower().StartsWith("/creaevento"))
+                {
+                    var user = stati.Find(a => a.UserId == text.From.Id);
+                    if (user == null) //Non in lista
+                        stati.Add(new Stato { UserId = text.From.Id, State = 1 });
+                    else
+                        user.State = 1;
+
+                    var livelloAutorizzazione = GetLivelloAutorizzazione(text.From.Id);
+
+                    switch (livelloAutorizzazione)
+                    {
+                        case LivelloAuth.Sindaco:
+                            user.State = 201;
+                            await StampaCreazioneEventoStep1(text.From.Id);
+                            return;
+                        default:
+                            await StampaErroreGenerico(text.From.Id);
+                            return;
+                    }
+                }
+            }
+            else
+            {
+                var user = stati.Find(a => a.UserId == text.From.Id);
+                if (user == null) //Non in lista
+                {
+                    await StampaErroreGenerico(text.From.Id);
+                    return;
+                }
+                else
+                {
+                    if (user.State == 201) //Nome /creaevento
+                    {
+                        if (user.ObjectState == null)
+                            user.ObjectState = new CreaEvento();
+                        else if (!(user.ObjectState is CreaEvento))
+                            user.ObjectState = new CreaEvento();
+
+                        //Richiesta nome già inviata
+                        (user.ObjectState as CreaEvento).Nome = text.Text;
+                        user.State = 202;
+                        await StampaCreazioneEventoStep2(text.From.Id);
+                    }
+                    else if (user.State == 202) //Descrizione /creaevento
+                    {
+                        //Richiesta descrizione già inviata
+                        (user.ObjectState as CreaEvento).Descrizione= text.Text;
+                        user.State = 203;
+                        await StampaCreazioneEventoStep3(text.From.Id);
+                    }
+                    else if(user.State == 204)
+                    {
+                        if (DateTime.TryParse(text.Text, out DateTime result))
+                        {
+                            (user.ObjectState as CreaEvento).DataOraInizio = DateTime.Parse(text.Text);
+                            user.State = 205;
+                            await StampaCreazioneEventoStep5(text.From.Id);
+                            //TODO --> PROSEGUIRE QUI
+                        }
+                        else
+                        {
+                            await StampaCreazioneEventoStep46Err(text.From.Id);
                         }
                     }
                 }
@@ -269,7 +345,26 @@ namespace CueBoT
                                ParseMode.Default, true, false, 0);
             }
         }
-
+        private static async Task HandleLocation(long id, Location location)
+        {
+            var user = stati.Find(a => a.UserId == id);
+            if (user == null)
+            {
+                await StampaErroreGenerico(id);
+                return;
+            }
+            else
+            {
+                if (user.State == 203) //Posizione /creaevento
+                {
+                    //Richiesta posizione già inviata
+                    (user.ObjectState as CreaEvento).Latitudine = location.Latitude;
+                    (user.ObjectState as CreaEvento).Longitudine = location.Longitude;
+                    user.State = 204;
+                    await StampaCreazioneEventoStep4(id);
+                }
+            }
+        }
         #endregion
 
         #region Gestione risposte - callbacks
@@ -438,6 +533,21 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
         }
 
         #endregion
+
+        #region Simplifier
+
+        static async Task StampaCreazioneEventoStep1(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP1);
+        static async Task StampaCreazioneEventoStep2(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP2);
+        static async Task StampaCreazioneEventoStep3(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP3);
+        static async Task StampaCreazioneEventoStep4(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP4);
+        static async Task StampaCreazioneEventoStep46Err(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP46ERR);
+        static async Task StampaCreazioneEventoStep5(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP5,
+                               ParseMode.Default, true, false, 0, new ReplyKeyboardMarkup(new[] { new KeyboardButton("Si"), new KeyboardButton("No") }, false, true));
+        static async Task StampaErroreGenerico(long id) => await bot.SendTextMessageAsync(id, MSG_ERRORE_GENERICO);
+        static bool GetUtenteRegistrato(long id) => IsEnabledCommand($"SELECT CASE WHEN EXISTS (SELECT * FROM Utenti WHERE Utenti.id_utente = '{id}') THEN CAST (1 AS BIT) ELSE CAST (0 AS BIT) END");
+        static LivelloAuth GetLivelloAutorizzazione(long id) => (LivelloAuth)AuthLevel($"SELECT id_auth FROM Utenti, Registrati WHERE Utenti.id_utente = {id} AND Utenti.id_utente = Registrati.id_utente");
+        
+        #endregion
     }
 
     public class Stato
@@ -449,10 +559,23 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
 
     public enum LivelloAuth
     {
+        Errore = -1,
         Admin = 1,
         Sindaco = 2,
         Responsabile = 3,
         Volontario = 4,
         Utente = 5
+    }
+
+    public class CreaEvento
+    {
+        public string Nome { get; set; }
+        public string Descrizione { get; set; }
+        public float Latitudine { get; set; }
+        public float Longitudine { get; set; }
+        public DateTime DataOraInizio { get; set; }
+        public DateTime? DataOraFine { get; set; }
+        public List<string> Responsabili { get; set; }
+        public bool Privato { get; set; }
     }
 }

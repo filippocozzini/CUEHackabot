@@ -19,9 +19,11 @@ namespace CueBoT
         const string MSG_CREAZIONE_EVENTO_STEP1 = "Bene! per proseguire dimmi che nome vuoi assegnare all'evento";
         const string MSG_CREAZIONE_EVENTO_STEP2 = "Grazie, ora per favore forniscimi una descrizione";
         const string MSG_CREAZIONE_EVENTO_STEP3 = "Perfetto, allegami la posizione dell'evento";
-        const string MSG_CREAZIONE_EVENTO_STEP4 = "Ora inviami la data di inizio dell'evento, il formato deve essere GG/MM/YYYY";
+        const string MSG_CREAZIONE_EVENTO_STEP4 = "Ora inviami la data di inizio dell'evento\n(il formato deve essere GG/MM/YYYY)";
         const string MSG_CREAZIONE_EVENTO_STEP46ERR = "Non riesco a capire la data, per favore inseriscila nuovamente";
         const string MSG_CREAZIONE_EVENTO_STEP5 = "Fantastico! Vuoi impostare anche la data di fine evento?";
+        const string MSG_CREAZIONE_EVENTO_STEP6 = "Ok, ora inviami la data di fine evento\n (il formato deve essere GG/MM/YYYY)";
+        const string MSG_CREAZIONE_EVENTO_STEP7 = "Ora ho bisogno di impostare un responsabile dell'evento, inviamelo come contatto o scrivi la sua matricola";
 
         static SqliteConnection dbSqlite;
         static List<Stato> stati;
@@ -272,18 +274,50 @@ namespace CueBoT
                             (user.ObjectState as CreaEvento).DataOraInizio = DateTime.Parse(text.Text);
                             user.State = 205;
                             await StampaCreazioneEventoStep5(text.From.Id);
-                            //TODO --> PROSEGUIRE QUI
                         }
                         else
                         {
                             await StampaCreazioneEventoStep46Err(text.From.Id);
                         }
                     }
+                    else if(user.State == 205)
+                    {
+                        if (text.Text.ToLower().Contains("Si"))
+                        {
+                            user.State = 206;
+                            await StampaCreazioneEventoStep6(text.From.Id);
+                        }
+                        else if (text.Text.ToLower().Contains("No"))
+                        {
+                            user.State = 207;
+                            await StampaCreazioneEventoStep7(text.From.Id);
+                        }
+
+                    }
+                    else if (user.State == 206)
+                    {
+                        if (DateTime.TryParse(text.Text, out DateTime result))
+                        {
+                            (user.ObjectState as CreaEvento).DataOraFine = DateTime.Parse(text.Text);
+                            user.State = 207;
+                            await StampaCreazioneEventoStep7(text.From.Id);
+                        }
+                        else
+                        {
+                            await StampaCreazioneEventoStep46Err(text.From.Id);
+                        }
+                    }
+                    else if(user.State == 207)
+                    {
+                        //Query su Matricola
+                    }
+
                 }
             }
         }
         private static async Task HandleContact(long id, Contact contact)
         {
+            var numeroDiTelefono = contact.PhoneNumber.StartsWith("39") ? contact.PhoneNumber.Substring(2) : contact.PhoneNumber;
             var user = stati.Find(a => a.UserId == id);
 
             if (user == null) //Agli inizi
@@ -306,7 +340,7 @@ namespace CueBoT
                 }
                 else
                 {
-                    var utenteSearchResult = GetNomeRegistrato($"SELECT nome, id_auth FROM Registrati WHERE tel=\"{contact.PhoneNumber.Replace("39", "")}\";"); //Temporary fix
+                    var utenteSearchResult = GetNomeRegistrato($"SELECT nome, id_auth FROM Registrati WHERE tel=\"{numeroDiTelefono}\";"); //Temporary fix
 
                     switch (utenteSearchResult.Item2)
                     {
@@ -316,7 +350,7 @@ namespace CueBoT
                                new ReplyKeyboardMarkup(new[] { KeyboardButton.WithRequestContact("Invia numero di telefono") }, false, true));
                             return;
                         case 0:
-                            RunCommand($"INSERT INTO Registrati VALUES (\"{contact.PhoneNumber.Replace("39", "")}\", {id}, \"\", \"\", \"\", \"\", \"\", \"5\");");
+                            RunCommand($"INSERT INTO Registrati VALUES (\"{numeroDiTelefono}\", {id}, \"\", \"\", \"\", \"\", \"\", \"5\");");
                             await bot.SendTextMessageAsync(id, $"Benvenuto, {contact.FirstName}!", //TODO
                                ParseMode.Default, true, false, 0);
                             break;
@@ -325,19 +359,22 @@ namespace CueBoT
                         case 3:
                         case 4:
                         case 5:
-                            RunCommand($"UPDATE Registrati SET id_utente = {id} WHERE tel = \"{contact.PhoneNumber.Replace("39", "")}\"");
+                            RunCommand($"UPDATE Registrati SET id_utente = {id} WHERE tel = \"{numeroDiTelefono}\"");
                             await bot.SendTextMessageAsync(id, $"Benvenuto, {utenteSearchResult.Item1}!", //TODO
                                ParseMode.Default, true, false, 0);
                             break;
                     }
-
-                    RunCommand($"INSERT INTO Utenti VALUES ({id}, {contact.PhoneNumber.Replace("39", "")});");
+                    RunCommand($"INSERT INTO Utenti VALUES ({id}, {numeroDiTelefono});");
 
                     user.State = 1;
                     var indexUser = stati.FindIndex(a => a.UserId == id);
                     if (indexUser == -1)
                         stati.Add(user);
                 }
+            }
+            else if(user.State == 207)
+            {
+                
             }
             else
             {
@@ -543,6 +580,8 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
         static async Task StampaCreazioneEventoStep46Err(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP46ERR);
         static async Task StampaCreazioneEventoStep5(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP5,
                                ParseMode.Default, true, false, 0, new ReplyKeyboardMarkup(new[] { new KeyboardButton("Si"), new KeyboardButton("No") }, false, true));
+        static async Task StampaCreazioneEventoStep6(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP6);
+        static async Task StampaCreazioneEventoStep7(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP7);
         static async Task StampaErroreGenerico(long id) => await bot.SendTextMessageAsync(id, MSG_ERRORE_GENERICO);
         static bool GetUtenteRegistrato(long id) => IsEnabledCommand($"SELECT CASE WHEN EXISTS (SELECT * FROM Utenti WHERE Utenti.id_utente = '{id}') THEN CAST (1 AS BIT) ELSE CAST (0 AS BIT) END");
         static LivelloAuth GetLivelloAutorizzazione(long id) => (LivelloAuth)AuthLevel($"SELECT id_auth FROM Utenti, Registrati WHERE Utenti.id_utente = {id} AND Utenti.id_utente = Registrati.id_utente");

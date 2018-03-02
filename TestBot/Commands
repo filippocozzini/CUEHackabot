@@ -22,7 +22,7 @@ Che cosa vuoi fare?
 ==== RESPONSABILE ====
 ======================
 
-Sei stato assegnato responsabile del'Evento <nome evento>
+Sei stato assegnato responsabile dell'Evento <nome evento>
 \crearePunto
 \chiuderePunto
 \assegnareVolontario
@@ -41,12 +41,12 @@ Sei stato assegnato responsabile del'Evento <nome evento>
 ===== VOLONTARIO =====
 ======================
 
-Sei stato assegnato responsabile dello Punto <nome punto>
+Sei stato assegnato responsabile dell Punto <nome punto>
 - Confermare?
 
 ======================
 ======= UTENTE =======
 ======================
 
-Nuovo Evento <nome evento> dalle <data> alle <fine>
+Nuovo Evento <nome evento> dal <data inizio> al <data fine>
 - Seguire?

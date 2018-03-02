@@ -1,0 +1,52 @@
+======================
+====== SINDACO =======
+======================
+
+Che cosa vuoi fare?
+\creareEvento
+\finireEvento
+\listaEventiAttivi
+\listaVolontari
+
+*** \creareEvento ***
+
+- Nome del'Evento
+- Indirizzo
+- Responsabile del'Evento
+- Data di inizio
+- Esiste già una data di fine?
+- Definire come un'Evento Privato?
+- Confermare
+
+======================
+==== RESPONSABILE ====
+======================
+
+Sei stato assegnato responsabile dell'Evento <nome evento>
+\crearePunto
+\chiuderePunto
+\assegnareVolontario
+\listaPunti
+\listaVolontari
+
+
+*** \crearePunti ***
+
+- Nome Punto
+- Indirizzo
+- Volontario Responsabile
+- Confermare
+
+======================
+===== VOLONTARIO =====
+======================
+
+Sei stato assegnato responsabile dell Punto <nome punto>
+- Confermare?
+
+======================
+======= UTENTE =======
+======================
+
+Nuovo Evento <nome evento> dal <data inizio> al <data fine>
+- Seguire?

@@ -19,7 +19,7 @@ namespace CueBoT
 
         const string MSG_ERRORE_GENERICO = "⚠️ Comando non riconosciuto \nPremi su /start per visualizzare tutta la lista di comandi disponibili";
         const string MSG_UTENTE_NON_DISPONIBILE = "L'utente sembra non utilizzi il servizio, prova con un altra persona";
-        const string MSG_CREAZIONE_EVENTO_STEP1 = "🆕 Bene! Possiamo cominciare a creare l'evento. Che nome vuoi assegnare all'<b>evento</b>?";
+        const string MSG_CREAZIONE_EVENTO_STEP1 = "Bene! Possiamo cominciare a creare l'evento. Che nome vuoi assegnare all'<b>evento</b>?";
         const string MSG_CREAZIONE_EVENTO_STEP2 = "Grazie, ora per favore forniscimi una piccola <b>descrizione</b>";
         const string MSG_CREAZIONE_EVENTO_STEP3 = "Perfetto, allegami la <b>posizione</b> dell'evento";
         const string MSG_CREAZIONE_EVENTO_STEP4 = "Ci siamo quasi! Quale sarà la <b>data di inizio</b> dell'evento:\n<i>(il formato deve essere GG/MM/YYYY)</i>";
@@ -41,7 +41,7 @@ namespace CueBoT
         static TelegramBotClient bot;
         public static void Main(string[] args)
         {
-            bot = new TelegramBotClient("532972105:AAEgUAI4R68IK5AAQYaiJV_w02yc_ehiUbQ"); //Token Telegram
+            bot = new TelegramBotClient("568945954:AAGysMxImX-6k68mbWMYxRtsiq6oaxpK5V8"); //Token Telegram
 
             SetupSqlite(); //Imposto e mi connetto al DB SQLite
             SettingDbSqlite(); //Creo le varie tabelle (se non esistono) e leggo il contenuto
@@ -189,7 +189,7 @@ namespace CueBoT
                             user = stati[stati.Count - 1];
                         }
 
-                        await bot.SendTextMessageAsync(text.From.Id, "Ciao!\nSembra che sia la prima volta che stai usando questo bot! Perfavore registrati inviando il tuo numero di telefono!",
+                        await bot.SendTextMessageAsync(text.From.Id, "👋 Ciao!\nVedo che è la prima volta che vieni qua. Io sono 🤖iCUEBot, un assistente automatico che coordina e ti informa sugli ultimi eventi nella tua zona, creato dalla 🚒Centrale Unica d'Emergenza.\nSei pronto per iniziare?\nPer favore comincia inviandomi il tuo 📱numero di telefono in modo che possa identificarti.",
                                    ParseMode.Default, true, false, 0,
                                    new ReplyKeyboardMarkup(new[] { KeyboardButton.WithRequestContact("Invia numero di telefono") }, false, true));
 
@@ -215,9 +215,6 @@ namespace CueBoT
                                             "• /listavolontari - <i>Visualizza la lista dei volontari</i>\n" + "• /aiuto - <i>Se hai bisogno di aiuto premi qui</i>", ParseMode.Html);
                                 break;
                             case LivelloAuth.Responsabile:
-                                await bot.SendTextMessageAsync(text.From.Id, "⚙️ <b>Per gestire il bot devi utilizzare i seguenti comandi:</b>\n• /creapunto - <i>Crea un punto di controllo</i>\n" +
-                                            "• /eliminapunto - <i>Elimina un punto di controllo</i>\n" + "• /listapunti - <i>Visualizza la lista dei punti di controllo</i>\n" +
-                                            "• /listavolontari - <i>Visualizza la lista dei volontari dell'evento</i>\n" + "• /aiuto - <i>Se hai bisogno di aiuto premi qui</i>", ParseMode.Html);
                                 break;
                             case LivelloAuth.Volontario:
                                 //TODO
@@ -237,6 +234,13 @@ namespace CueBoT
                     {
                         stati.Add(new Stato { UserId = text.From.Id, State = 1 });
                         user = stati[stati.Count - 1];
+                    }
+
+                    bool UtenteRegistrato = GetUtenteRegistrato(text.From.Id);
+                    if (!UtenteRegistrato)
+                    {
+                        await bot.SendTextMessageAsync(text.From.Id, $"Comando errato.", ParseMode.Default, true, false, 0);
+                        return;
                     }
 
                     var livelloAutorizzazione = GetLivelloAutorizzazione(text.From.Id);
@@ -261,6 +265,13 @@ namespace CueBoT
                     {
                         stati.Add(new Stato { UserId = text.From.Id, State = 1 });
                         user = stati[stati.Count - 1];
+                    }
+
+                    bool UtenteRegistrato = GetUtenteRegistrato(text.From.Id);
+                    if (!UtenteRegistrato)
+                    {
+                        await bot.SendTextMessageAsync(text.From.Id, $"Comando errato.", ParseMode.Default, true, false, 0);
+                        return;
                     }
 
                     var livelloAutorizzazione = GetLivelloAutorizzazione(text.From.Id);
@@ -289,6 +300,69 @@ namespace CueBoT
                             break;
                     }
 
+                }
+                //else if (text.Text.ToLower().StartsWith("/apripunto"))
+                //{
+                //    var user = stati.Find(a => a.UserId == text.From.Id);
+                //    if (user == null) //Non in lista
+                //    {
+                //        stati.Add(new Stato { UserId = text.From.Id, State = 1 });
+                //        user = stati[stati.Count - 1];
+                //    }
+
+                //    bool UtenteRegistrato = GetUtenteRegistrato(text.From.Id);
+                //    if (!UtenteRegistrato)
+                //    {
+                //        await bot.SendTextMessageAsync(text.From.Id, $"Comando errato.", ParseMode.Default, true, false, 0);
+                //        return;
+                //    }
+
+                //    var livelloAutorizzazione = GetLivelloAutorizzazione(text.From.Id);
+
+                //    switch (livelloAutorizzazione)
+                //    {
+                //        case LivelloAuth.Volontario:
+                //            user.ObjectState = new ApriPunto();
+                //            (user.ObjectState as ApriPunto).EventiAssegnati = GetEventiDelResponsabile(text.From.Id);
+                //            user.State = 301;
+
+                //            if ((user.ObjectState as ApriPunto).EventiAssegnati.Count == 0)
+                //            {
+                //                //Non ha eventi assegnati
+                //                await bot.SendTextMessageAsync(text.From.Id, "⚠️ Non ho trovato nessun evento");
+                //                user.State = 1;
+                //                user.ObjectState = null;
+                //                return;
+                //            }
+
+                //            await StampaCreazionePuntoStep1(text.From.Id);
+                //            break;
+                //        case LivelloAuth.Utente:
+                //            break;
+                //        default:
+                //            break;
+                //    }
+                //}
+                else if (text.Text.ToLower().StartsWith("/annulla"))
+                {
+                    var user = stati.Find(a => a.UserId == text.From.Id);
+                    if (user == null) //Non in lista
+                    {
+                        stati.Add(new Stato { UserId = text.From.Id, State = 1 });
+                        user = stati[stati.Count - 1];
+                    }
+
+                    bool UtenteRegistrato = GetUtenteRegistrato(text.From.Id);
+                    if (!UtenteRegistrato)
+                    {
+                        await bot.SendTextMessageAsync(text.From.Id, $"Comando errato.", ParseMode.Default, true, false, 0);
+                        return;
+                    }
+
+                    await bot.SendTextMessageAsync(text.From.Id, "❌ Comando annullato");
+                    user.ObjectState = null;
+                    user.State = 0;
+                    return;
                 }
             }
             else
@@ -407,11 +481,16 @@ namespace CueBoT
                                         break;
                                     case LivelloAuth.Volontario:
                                         if (utentiRegistrati[i].Key.ToString() == ev.Responsabili[0])
+                                        {
                                             await NotificaResp(utentiRegistrati[i].Key, $"❗️ <b>Nuovo evento segnalato</b> ❗️\n\nSei stato segnalato come <b>responsabile</b> di questo evento, se hai bisogno di informazioni utilizza il comando /aiuto\n\n<b>{ev.Nome}</b>\n\n📍{ev.Latitudine.ToString().Replace(",", ".")}, {ev.Longitudine.ToString().Replace(",", ".")}\n📅{ev.DataOraInizio.ToString("dd/MM/yyyy")} - {(ev.DataOraFine.HasValue ? ev.DataOraFine.Value.ToString("dd/MM/yyyy") : "???")}\n\n<i>{ev.Descrizione}</i>");
+                                            await bot.SendTextMessageAsync(utentiRegistrati[i].Key, "⚙️ <b>Per gestire il bot devi utilizzare i seguenti comandi:</b>\n• /creapunto - <i>Crea un punto di controllo</i>\n" +
+                                            "• /eliminapunto - <i>Elimina un punto di controllo</i>\n" + "• /listapunti - <i>Visualizza la lista dei punti di controllo</i>\n" +
+                                            "• /listavolontari - <i>Visualizza la lista dei volontari dell'evento</i>\n" + "• /aiuto - <i>Se hai bisogno di aiuto premi qui</i>", ParseMode.Html);
+                                        }  
                                         break;
                                     case LivelloAuth.Utente:
                                         if (!ev.Privato)
-                                            await Notifica(utentiRegistrati[i].Key, $"❗️ <b>Nuovo evento segnalato</b> ❗️\n\n<b>{ev.Nome}</b>\n\n📍{ev.Latitudine.ToString().Replace(",", ".")}, {ev.Longitudine.ToString().Replace(",", ".")}\n📅{ev.DataOraInizio.ToString("dd/MM/yyyy")} - {(ev.DataOraFine.HasValue ? ev.DataOraFine.Value.ToString("dd/MM/yyyy") : "???")}\n\n<i>{ev.Descrizione}</i>");
+                                            await Notifica(utentiRegistrati[i].Key, $"❗️ <b>Nuovo evento segnalato</b> ❗️\n\n<b>{ev.Nome}</b>\n\n📍{ev.Latitudine.ToString().Replace(",", ".")}, {ev.Longitudine.ToString().Replace(",", ".")}\n📅{ev.DataOraInizio.ToString("dd/MM/yyyy")} - {(ev.DataOraFine.HasValue ? ev.DataOraFine.Value.ToString("dd/MM/yyyy") : "???")}\n\n<i>{ev.Descrizione}</i>", lastId);
                                         break;
                                 }
                             }
@@ -462,13 +541,7 @@ namespace CueBoT
                         }
                         else
                         {
-                            var oggetto = (user.ObjectState as CreaPunto);
-                            var elemento = oggetto.EventiAssegnati[0];
-                            RunCommand($"INSERT INTO EventiVolontari VALUES (\"{elemento.Item1}\", \"{oggetto.Volontari[0]}\", \"{text.From.Id}\", \"{oggetto.Latitudine}\", \"{oggetto.Longitudine}\", \"{oggetto.Aperto}\");");
-                            await bot.SendTextMessageAsync(text.From.Id, $"Ho aggiunto il punto di controllo, qui puoi trovare il riepilogo:\n\n<b>{oggetto.Nome}</b>\n\n📍{oggetto.Latitudine.ToString().Replace(",", ".")}, {oggetto.Longitudine.ToString().Replace(",", ".")}\n{(oggetto.Aperto ? "🔓 Aperto" : "🔒 Chiuso")}\n\n<i>L'utente assegnato riceverà un notifica per informarlo</i>", ParseMode.Html);
-                            user.State = 1; //OKKKK
-                            user.ObjectState = null;
-                            GC.Collect();
+                            await CreazionePuntoCompletata(text.From.Id, 0, user);
                             return;
                         }
                     }
@@ -483,9 +556,9 @@ namespace CueBoT
             if (user == null) //Agli inizi
             {
                 stati.Add(new Stato { UserId = id, State = 0 });
-                await bot.SendTextMessageAsync(id, "Ciao!\nSembra che sia la prima volta che stai usando questo bot! Perfavore registrati inviando il tuo numero di telefono!",
-                               ParseMode.Default, true, false, 0,
-                               new ReplyKeyboardMarkup(new[] { KeyboardButton.WithRequestContact("Invia numero di telefono") }, false, true));
+                await bot.SendTextMessageAsync(id, "👋 Ciao!\nVedo che è la prima volta che vieni qua. Io sono 🤖iCUEBot, un assistente automatico che coordina e ti informa sugli ultimi eventi nella tua zona, creato dalla 🚒Centrale Unica d'Emergenza.\nSei pronto per iniziare?\nPer favore comincia inviandomi il tuo 📱numero di telefono in modo che possa identificarti.",
+                                   ParseMode.Default, true, false, 0,
+                                   new ReplyKeyboardMarkup(new[] { KeyboardButton.WithRequestContact("Invia numero di telefono") }, false, true));
                 return;
             }
 
@@ -511,17 +584,24 @@ namespace CueBoT
                             return;
                         case 0:
                             RunCommand($"INSERT INTO Registrati VALUES (\"{numeroDiTelefono}\", {id}, \"\", \"\", \"\", \"\", \"\", \"5\");");
-                            await bot.SendTextMessageAsync(id, $"Benvenuto, {contact.FirstName}!", //TODO
+                            await bot.SendTextMessageAsync(id, $"👍 Benvenuto/a, {contact.FirstName}!\nRiceverai le notifiche ogni volta che viene creato un evento nella tua zona.\nSe hai domande o dubbi, scrivi in qualsiasi momento /aiuto.", //TODO
                                ParseMode.Default, true, false, 0);
                             break;
                         case 1:
-                        case 2:
                         case 3:
                         case 4:
+                            RunCommand($"UPDATE Registrati SET id_utente = {id} WHERE tel = \"{numeroDiTelefono}\"");
+                            await bot.SendTextMessageAsync(id, $"👍 Benvenuto/a, {utenteSearchResult.Item1}!\nRiceverai le notifiche ogni volta che viene creato un evento nella tua zona. Se sei interessato ad un evento, seleziona <i>mi interessa!</i>. Sarai informato su tutti gli sviluppi e riceverai gli aggiornamenti relativi a quell'evento.\nSe hai domande o dubbi, scrivi in qualsiasi momento /aiuto.", ParseMode.Html);
+                            break;
                         case 5:
                             RunCommand($"UPDATE Registrati SET id_utente = {id} WHERE tel = \"{numeroDiTelefono}\"");
-                            await bot.SendTextMessageAsync(id, $"Benvenuto, {utenteSearchResult.Item1}!", //TODO
-                               ParseMode.Default, true, false, 0);
+                            await bot.SendTextMessageAsync(id, $"👍 Benvenuto/a, {utenteSearchResult.Item1}!\nRiceverai le notifiche ogni volta che viene creato un evento nella tua zona.\nSe hai domande o dubbi, scrivi in qualsiasi momento /aiuto.", ParseMode.Html);
+                            break;
+                        case 2:
+                            RunCommand($"UPDATE Registrati SET id_utente = {id} WHERE tel = \"{numeroDiTelefono}\"");
+                            await bot.SendTextMessageAsync(id, $"👍Benvenuto/a, {utenteSearchResult.Item1}!\n⚙️ <b>Per gestire il bot devi utilizzare i seguenti comandi:</b>\n• /creaevento - <i>Crea un evento</i>\n" +
+                                            "• /eliminaevento - <i>Elimina un evento</i>\n" + "• /listaeventi - <i>Visualizza la lista degli eventi attivi</i>\n" +
+                                            "• /listavolontari - <i>Visualizza la lista dei volontari</i>\n" + "• /aiuto - <i>Se hai bisogno di aiuto premi qui</i>", ParseMode.Html);
                             break;
                     }
                     RunCommand($"INSERT INTO Utenti VALUES ({id}, {numeroDiTelefono});");
@@ -604,6 +684,49 @@ namespace CueBoT
 
             if (user == null) //Agli inizi
             {
+                bool UtenteRegistrato = GetUtenteRegistrato(callback.From.Id);
+                if (!UtenteRegistrato)
+                {
+                    await bot.SendTextMessageAsync(callback.From.Id, $"Comando errato.", ParseMode.Default, true, false, 0);
+                    return;
+                }
+
+                stati.Add(new Stato { UserId = callback.From.Id, State = 1 });
+                user = stati[stati.Count - 1];
+            }
+
+            if (user.State == 1)
+            {
+                if (callback.Data.StartsWith("Interessato"))
+                {
+
+                    try
+                    {
+                        int idEvento = int.Parse(callback.Data.Split('-')[1]);
+                        RunCommand($"INSERT INTO EventiUtenti VALUES (\"{idEvento}\",\"{callback.From.Id}\")");
+
+                        await ModificaNotifica(callback.From.Id, callback.Message.MessageId, idEvento, false);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Errore: " + ex.Message);
+                        //Il bot è stato bloccato male
+                    }
+                }
+                else if (callback.Data.StartsWith("Non interessato"))
+                {
+                    try
+                    {
+                        int idEvento = int.Parse(callback.Data.Split('-')[1]);
+                        RunCommand($"DELETE FROM EventiUtenti WHERE id_utente = \"{callback.From.Id}\" AND id_evento = \"{idEvento}\"");
+                        await ModificaNotifica(callback.From.Id, callback.Message.MessageId, idEvento, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Errore: " + ex.Message);
+                        //Il bot è stato bloccato male
+                    }
+                }
                 return;
             }
 
@@ -617,13 +740,7 @@ namespace CueBoT
                 {
                     //TODO: messaggio da fare per conferma evento
                     int pos = int.Parse(callback.Data.Split('-')[1]);
-                    var oggetto = (user.ObjectState as CreaPunto);
-                    var elemento = oggetto.EventiAssegnati[pos];
-                    RunCommand($"INSERT INTO EventiVolontari VALUES (\"{elemento.Item1}\", \"{oggetto.Volontari[0]}\", \"{callback.From.Id}\", \"{oggetto.Latitudine}\", \"{oggetto.Longitudine}\", \"{oggetto.Aperto}\");");
-                    await bot.SendTextMessageAsync(callback.From.Id,$"Ho aggiunto il punto di controllo, qui puoi trovare il riepilogo:\n\n<b>{oggetto.Nome}</b>\n\n📍{oggetto.Latitudine.ToString().Replace(",",".")}, {oggetto.Longitudine.ToString().Replace(",",".")}\n{(oggetto.Aperto ? "🔓 Aperto" : "🔒 Chiuso")}\n\n<i>L'utente assegnato riceverà un notifica per informarlo</i>", ParseMode.Html);
-                    user.State = 1; //OKKKK
-                    user.ObjectState = null;
-                    GC.Collect();
+                    await CreazionePuntoCompletata(callback.From.Id, pos, user);
                     return;
                 }
             }
@@ -908,7 +1025,6 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
             }
             return null; //Return
         }
-
         static List<Tuple<int, string, string>> GetEventiDelResponsabile(long id)
         {
             var sql = $"SELECT Eventi.id_evento, nome, descrizione FROM Eventi, (SELECT id_evento FROM EventiResp WHERE EventiResp.id_resp = {id}) AS EventiAssegnati WHERE Eventi.id_evento = EventiAssegnati.id_evento";
@@ -932,6 +1048,97 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
                         while (reader.Read())
                             listaUtenti.Add(new Tuple<int, string, string>(reader.GetInt32(0), reader.GetString(1), reader.GetString(2)));
                     return listaUtenti;
+                }
+                catch (Exception ex2)
+                {
+                    Console.WriteLine($"Invio SQL Query fallito \"{sql}\" per la seconda volta. {ex2.Message}");
+                }
+            }
+            return null; //Return
+        }
+
+        static List<int> GetVolontariFromEvento(long idEvento, long idResp)
+        {
+            var sql = $"SELECT id_evento FROM EventiVolontari WHERE id_resp = {idResp} AND id_evento = {idEvento}";
+            List<int> listaUtenti = new List<int>();
+            try
+            {
+                using (var command = new SqliteCommand(sql, dbSqlite))
+                using (var reader = command.ExecuteReader())
+                    while (reader.Read())
+                        listaUtenti.Add(reader.GetInt32(0));
+                return listaUtenti;
+            }
+            catch (Exception ex)
+            {
+                listaUtenti.Clear();
+                Console.WriteLine($"Invio SQL Query fallito \"{sql}\", verrà eseguito un nuovo tentativo: {ex.Message}");
+                try
+                {
+                    using (var command = new SqliteCommand(sql, dbSqlite))
+                    using (var reader = command.ExecuteReader())
+                        while (reader.Read())
+                            listaUtenti.Add(reader.GetInt32(0));
+                    return listaUtenti;
+                }
+                catch (Exception ex2)
+                {
+                    Console.WriteLine($"Invio SQL Query fallito \"{sql}\" per la seconda volta. {ex2.Message}");
+                }
+            }
+            return null; //Return
+        }
+        static List<string> GetUtentiRegistratoEvento(long idEvento)
+        {
+            Console.WriteLine(idEvento);
+            var sql = $"SELECT id_utente FROM EventiUtenti WHERE id_evento = {idEvento}";
+            List<string> listaUtenti = new List<string>();
+            try
+            {
+                using (var command = new SqliteCommand(sql, dbSqlite))
+                using (var reader = command.ExecuteReader())
+                    while (reader.Read())
+                        listaUtenti.Add(reader.GetString(0));
+                return listaUtenti;
+            }
+            catch (Exception ex)
+            {
+                listaUtenti.Clear();
+                Console.WriteLine($"Invio SQL Query fallito \"{sql}\", verrà eseguito un nuovo tentativo: {ex.Message}");
+                try
+                {
+                    using (var command = new SqliteCommand(sql, dbSqlite))
+                    using (var reader = command.ExecuteReader())
+                        while (reader.Read())
+                            listaUtenti.Add(reader.GetString(0));
+                    return listaUtenti;
+                }
+                catch (Exception ex2)
+                {
+                    Console.WriteLine($"Invio SQL Query fallito \"{sql}\" per la seconda volta. {ex2.Message}");
+                }
+            }
+            return null; //Return
+        }
+        static string GetNomeEvento(long idEvento)
+        {
+            var sql = $"SELECT nome FROM Eventi WHERE id_evento = {idEvento}";
+            try
+            {
+                using (var command = new SqliteCommand(sql, dbSqlite))
+                using (var reader = command.ExecuteReader())
+                    while (reader.Read())
+                        return reader.GetString(0);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Invio SQL Query fallito \"{sql}\", verrà eseguito un nuovo tentativo: {ex.Message}");
+                try
+                {
+                    using (var command = new SqliteCommand(sql, dbSqlite))
+                    using (var reader = command.ExecuteReader())
+                        while (reader.Read())
+                            return reader.GetString(0);
                 }
                 catch (Exception ex2)
                 {
@@ -970,10 +1177,11 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
         static async Task StampaCreazionePuntoStep2(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_PUNTO_STEP2, ParseMode.Html);
         static async Task StampaCreazionePuntoStep3(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_PUNTO_STEP3, ParseMode.Html);
         static async Task StampaCreazionePuntoStep4(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_PUNTO_STEP4, ParseMode.Html,
-                            true, false, 0, new ReplyKeyboardMarkup(new[] { new KeyboardButton("Chiuso"), new KeyboardButton("Aperto") }, false, false));
+                            true, false, 0, new ReplyKeyboardMarkup(new[] { new KeyboardButton("Chiuso"), new KeyboardButton("Aperto") }, false, true));
 
         static async Task StampaCreazionePuntoStep5(long id, List<Tuple<int, string, string>> list, int pos = 0, bool edit = false, int messageId = 0)
         {
+
 
             var inlineKeyboard = new List<InlineKeyboardButton>();
             if (pos == 0)
@@ -1017,13 +1225,31 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
 
         #region BotHelper
 
-        static async Task Notifica(long id, string messaggio)
+        static async Task Notifica(long id, string messaggio, long idEvento = 0, bool edit = false)
         {
             try
             {
                 await bot.SendTextMessageAsync(id, messaggio, ParseMode.Html, true, false, 0,
                    new InlineKeyboardMarkup(new InlineKeyboardButton[] {new InlineKeyboardButton()
-                   { Text="Mi interessa!", CallbackData = "Interessato"}}));
+                   { Text="Mi interessa!", CallbackData = $"Interessato-{idEvento}"}}));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Errore: " + ex.Message);
+                //Il bot è stato bloccato male
+            }
+        }
+
+        static async Task ModificaNotifica(long id, int messageId, long idEvento = 0, bool rimosso = false)
+        {
+            try
+            {
+                if (rimosso)
+                    await bot.EditMessageReplyMarkupAsync(id, messageId, new InlineKeyboardMarkup(new InlineKeyboardButton[] {new InlineKeyboardButton()
+                        { Text="Mi interessa!", CallbackData = $"Interessato-{idEvento}"} }));
+                else
+                    await bot.EditMessageReplyMarkupAsync(id, messageId, new InlineKeyboardMarkup(new InlineKeyboardButton[] {new InlineKeyboardButton()
+                        { Text="Non mi interessa!", CallbackData = $"Non interessato-{idEvento}"} }));
             }
             catch (Exception ex)
             {
@@ -1043,6 +1269,44 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
                 Console.WriteLine("Errore: " + ex.Message);
                 //Il bot è stato bloccato male
             }
+        }
+
+        static async Task NotificaVol(long id, string messaggio)
+        {
+            try
+            {
+                await bot.SendTextMessageAsync(id, messaggio, ParseMode.Html, true, false, 0);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Errore: " + ex.Message);
+                //Il bot è stato bloccato male
+            }
+        }
+
+        static async Task CreazionePuntoCompletata(long id, int pos, Stato user)
+        {
+            var oggetto = (user.ObjectState as CreaPunto);
+            var elemento = oggetto.EventiAssegnati[pos];
+            RunCommand($"INSERT INTO EventiVolontari VALUES (\"{elemento.Item1}\", \"{oggetto.Volontari[0]}\", \"{id}\", \"{oggetto.Latitudine}\", \"{oggetto.Longitudine}\", \"{oggetto.Aperto}\");");
+            await bot.SendTextMessageAsync(id, $"Ho aggiunto il punto di controllo, qui puoi trovare il riepilogo:\n\n<b>{oggetto.Nome}</b>\n\n📍{oggetto.Latitudine.ToString().Replace(",", ".")}, {oggetto.Longitudine.ToString().Replace(",", ".")}\n{(oggetto.Aperto ? "✔️ Aperto" : "❌ Chiuso")}\n\n<i>L'utente assegnato riceverà un notifica per informarlo</i>", ParseMode.Html);
+            //Notifica Volontario Selezionato
+            await NotificaVol(int.Parse(oggetto.Volontari[0]), $"🚧 Sei stato selezionato al punto di controllo <b>{oggetto.Nome}</b>\n\nIl punto di controllo è attualmente {(oggetto.Aperto ? "<b>aperto</b>" : "<b>chiuso</b>")}\n\n<i>Attendi una comunicazione prima di variarne lo stato</i>");
+            await bot.SendVenueAsync(int.Parse(oggetto.Volontari[0]), oggetto.Latitudine, oggetto.Longitudine, oggetto.Nome, "");
+
+            //Notifica utenti iscritti
+            var utentiIscritti = GetUtentiRegistratoEvento(elemento.Item1);
+            var nomeEvento = GetNomeEvento(elemento.Item1);
+
+            for (int i = 0; i < utentiIscritti.Count; i++)
+            {
+                await bot.SendVenueAsync(utentiIscritti[i], oggetto.Latitudine, oggetto.Longitudine, oggetto.Nome, "");
+                await bot.SendTextMessageAsync(utentiIscritti[i], $"Hai una nuova notifica dall'evento <b>{nomeEvento}</b>\n\n🚧 <b>{oggetto.Nome}</b> è {(oggetto.Aperto ? "✔️ Aperto" : "❌ Chiuso")}", ParseMode.Html);
+            }
+
+            user.State = 1;
+            user.ObjectState = null;
+            GC.Collect();
         }
 
         #endregion

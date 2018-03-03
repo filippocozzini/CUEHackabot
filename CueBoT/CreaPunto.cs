@@ -12,4 +12,13 @@ namespace CueBoT
         public bool Aperto { get; set; } //Se il punto di controllo è aperto true altrimento false
         public List<Tuple<int, string, string>> EventiAssegnati { get; set; }
     }
+
+    public class ApriPunto
+    {
+        public string IdEvento { get; set; }
+        public string IdVolontario { get; set; }
+
+        public List<Tuple<int, string, string>> EventiAssegnati { get; set; }
+        public List<Tuple<int, string, string>> VolontariAssegnati { get; set; }
+    }
 }

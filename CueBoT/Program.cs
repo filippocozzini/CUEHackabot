@@ -15,17 +15,27 @@ namespace CueBoT
 {
     class Program
     {
-        const string MSG_ERRORE_GENERICO = "Comando non riconosciuto\nPremi su /aiuto per visualizzare la lista di comandi disponibili";
-        const string MSG_CREAZIONE_EVENTO_STEP1 = "Bene! per proseguire dimmi che nome vuoi assegnare all'evento";
-        const string MSG_CREAZIONE_EVENTO_STEP2 = "Grazie, ora per favore forniscimi una descrizione";
-        const string MSG_CREAZIONE_EVENTO_STEP3 = "Perfetto, allegami la posizione dell'evento";
-        const string MSG_CREAZIONE_EVENTO_STEP4 = "Ora inviami la data di inizio dell'evento\n(il formato deve essere GG/MM/YYYY)";
-        const string MSG_CREAZIONE_EVENTO_STEP46ERR = "Non riesco a capire la data, per favore inseriscila nuovamente";
-        const string MSG_CREAZIONE_EVENTO_STEP5 = "Fantastico! Vuoi impostare anche la data di fine evento?";
-        const string MSG_CREAZIONE_EVENTO_STEP6 = "Ok, ora inviami la data di fine evento\n (il formato deve essere GG/MM/YYYY)";
-        const string MSG_CREAZIONE_EVENTO_STEP7 = "Ora ho bisogno di impostare un responsabile dell'evento, inviamelo come contatto o scrivi la sua matricola";
-        const string MSG_CREAZIONE_EVENTO_STEP7ERR = "L'utente sembra non utilizzi il servizio, prova con un altra persona";
-        const string MSG_CREAZIONE_EVENTO_STEP8 = "Perfetto, vuoi rendere l'evento privato?\nGli utenti non vendranno alcuna notifica riguardo questo evento";
+        #region CREAZIONE EVENTO
+
+        const string MSG_ERRORE_GENERICO = "⚠️ Comando non riconosciuto \nPremi su /start per visualizzare tutta la lista di comandi disponibili";
+        const string MSG_UTENTE_NON_DISPONIBILE = "L'utente sembra non utilizzi il servizio, prova con un altra persona";
+        const string MSG_CREAZIONE_EVENTO_STEP1 = "🆕 Bene! Possiamo cominciare a creare l'evento. Che nome vuoi assegnare all'<b>evento</b>?";
+        const string MSG_CREAZIONE_EVENTO_STEP2 = "Grazie, ora per favore forniscimi una piccola <b>descrizione</b>";
+        const string MSG_CREAZIONE_EVENTO_STEP3 = "Perfetto, allegami la <b>posizione</b> dell'evento";
+        const string MSG_CREAZIONE_EVENTO_STEP4 = "Ci siamo quasi! Quale sarà la <b>data di inizio</b> dell'evento:\n<i>(il formato deve essere GG/MM/YYYY)</i>";
+        const string MSG_CREAZIONE_EVENTO_STEP46ERR = "⚠️ Non riesco a capire la data, per favore inseriscila nuovamente usando il formato GG/MM/YYYY";
+        const string MSG_CREAZIONE_EVENTO_STEP5 = "Fantastico! Vuoi impostare anche la <b>data di fine</b> dell'evento?";
+        const string MSG_CREAZIONE_EVENTO_STEP6 = "Inserisce la data di fine evento: \n<i>(il formato deve essere GG/MM/YYYY)</i>";
+        const string MSG_CREAZIONE_EVENTO_STEP7 = "Bravo! Adesso, ho bisogno che imposti un <b>responsabile</b> dell'evento: \n <i>(inviamelo come contatto o scrivi la sua matricola)</i>";
+        const string MSG_CREAZIONE_EVENTO_STEP8 = "Per finire, vuoi rendere questo evento <b>privato</b>?\n<i>(se privato, gli utenti non avranno accesso e non saranno informati)</i>";
+
+        #endregion
+
+        const string MSG_CREAZIONE_PUNTO_STEP1 = "🆕 Bene! Possiamo cominciare a creare il punto.\nChe nome vuoi assegnare al <b>punto</b>?";
+        const string MSG_CREAZIONE_PUNTO_STEP2 = "Perfetto, allegami la <b>posizione</b> del punto";
+        const string MSG_CREAZIONE_PUNTO_STEP3 = "Bravo! Adesso ho bisogno che imposti un <b>volontario</b> da assegnare al punto:\n<i>(inviamelo come contatto o scrivimi la sua matricola)</i>";
+        const string MSG_CREAZIONE_PUNTO_STEP4 = "Ora, vuoi rendere questo punto inizialmente <b>chiuso o aperto</b>?\n<i>(potrai successivamente fornire istruzioni al volontario se aprirlo o chiuderlo)</i>";
+        const string MSG_CREAZIONE_PUNTO_STEP5 = "Sei responsabile di <b>più eventi</b> perciò per favore seleziona l'evento al quale vuoi aggiungere il punto";
 
         static SqliteConnection dbSqlite;
         static List<Stato> stati;
@@ -201,12 +211,12 @@ namespace CueBoT
                                 //ADMIN
                                 break;
                             case LivelloAuth.Sindaco:
-                                await bot.SendTextMessageAsync(text.From.Id, "⚙️<b>Per gestire il bot devi utilizzare i seguenti comandi:</b>\n• /creaevento - <i>Crea un evento</i>\n" +
+                                await bot.SendTextMessageAsync(text.From.Id, "⚙️ <b>Per gestire il bot devi utilizzare i seguenti comandi:</b>\n• /creaevento - <i>Crea un evento</i>\n" +
                                             "• /eliminaevento - <i>Elimina un evento</i>\n" + "• /listaeventi - <i>Visualizza la lista degli eventi attivi</i>\n" +
                                             "• /listavolontari - <i>Visualizza la lista dei volontari</i>\n" + "• /aiuto - <i>Se hai bisogno di aiuto premi qui</i>", ParseMode.Html);
                                 break;
                             case LivelloAuth.Responsabile:
-                                await bot.SendTextMessageAsync(text.From.Id, "⚙️<b>Per gestire il bot devi utilizzare i seguenti comandi:</b>\n• /creapunto - <i>Crea un punto di controllo</i>\n" +
+                                await bot.SendTextMessageAsync(text.From.Id, "⚙️ <b>Per gestire il bot devi utilizzare i seguenti comandi:</b>\n• /creapunto - <i>Crea un punto di controllo</i>\n" +
                                             "• /eliminapunto - <i>Elimina un punto di controllo</i>\n" + "• /listapunti - <i>Visualizza la lista dei punti di controllo</i>\n" +
                                             "• /listavolontari - <i>Visualizza la lista dei volontari dell'evento</i>\n" + "• /aiuto - <i>Se hai bisogno di aiuto premi qui</i>", ParseMode.Html);
                                 break;
@@ -237,6 +247,10 @@ namespace CueBoT
                         case LivelloAuth.Sindaco:
                             user.State = 201;
                             await StampaCreazioneEventoStep1(text.From.Id);
+                            return;
+                        case LivelloAuth.Responsabile:
+                            user.State = 301;
+                            await StampaCreazionePuntoStep1(text.From.Id);
                             return;
                         default:
                             await StampaErroreGenerico(text.From.Id);
@@ -315,20 +329,118 @@ namespace CueBoT
                     }
                     else if (user.State == 207)
                     {
-                        if (IsUserTelefonoRegisteredInBot(text.Text))
+                        var idTelegram = 0;
+                        if ((idTelegram = IsUserTelefonoRegisteredInBot(text.Text)) != -1)
                         {
+                            (user.ObjectState as CreaEvento).Responsabili = new List<string>() { idTelegram.ToString() };
                             user.State = 208;
                             await StampaCreazioneEventoStep8(text.From.Id);
                         }
                         else
                         {
-                            if (IsUserMatricolaRegisteredInBot(text.Text))
+                            if ((idTelegram = IsUserMatricolaRegisteredInBot(text.Text)) != -1)
                             {
+                                (user.ObjectState as CreaEvento).Responsabili = new List<string>() { idTelegram.ToString() };
                                 user.State = 208;
                                 await StampaCreazioneEventoStep8(text.From.Id);
                             }
-                            await StampaCreazioneEventoStep7Err(text.From.Id);
+                            else
+                                await StampaUtenteNonDisponibile(text.From.Id);
                         }
+                    }
+                    else if(user.State == 208)
+                    {
+                        CreaEvento ev = user.ObjectState as CreaEvento;
+                        ev.Privato = (text.Text.ToLower().Contains("si") ? true : false);
+                        var lastId = GetLastRow($"INSERT INTO Eventi(id_creatore, nome, descrizione, data_inizio, data_fine, privato) VALUES ({text.From.Id}, \"{ev.Nome}\", \"{ev.Descrizione}\", \"{ev.DataOraInizio.ToString("dd-MM-yyyy")}\", \"{(ev.DataOraFine.HasValue ? ev.DataOraFine.Value.ToString("dd-MM-yyyy") : "NULL")}\", \"{ev.Privato}\"); SELECT last_insert_rowid();");
+                        RunCommand($"INSERT INTO EventiResp VALUES ({ev.Responsabili[0]},{lastId});");
+
+                        var utentiRegistrati = GetUtentiRegistrati();
+
+                        //Notifica tutti gli utenti senza filtri
+                        for (int i = 0; i < utentiRegistrati.Count; i++)
+                        {
+                            //TODO
+
+                            if (utentiRegistrati[i].Key != text.From.Id)
+                            {
+                                switch (utentiRegistrati[i].Value)
+                                {
+                                    case LivelloAuth.Errore:
+                                        break;
+                                    case LivelloAuth.Admin:
+                                        break;
+                                    case LivelloAuth.Sindaco:
+                                        break;
+                                    case LivelloAuth.Volontario:
+                                        if (utentiRegistrati[i].Key.ToString() == ev.Responsabili[0])
+                                            await NotificaResp(utentiRegistrati[i].Key, $"❗️ <b>Nuovo evento segnalato</b> ❗️\n\nSei stato segnalato come <b>responsabile</b> di questo evento, se hai bisogno di informazioni utilizza il comando /aiuto\n\n<b>{ev.Nome}</b>\n\n📍{ev.Latitudine.ToString().Replace(",", ".")}, {ev.Longitudine.ToString().Replace(",", ".")}\n📅{ev.DataOraInizio.ToString("dd/MM/yyyy")} - {(ev.DataOraFine.HasValue ? ev.DataOraFine.Value.ToString("dd/MM/yyyy") : "???")}\n\n<i>{ev.Descrizione}</i>");
+                                        break;
+                                    case LivelloAuth.Utente:
+                                        if (!ev.Privato)
+                                            await Notifica(utentiRegistrati[i].Key, $"❗️ <b>Nuovo evento segnalato</b> ❗️\n\n<b>{ev.Nome}</b>\n\n📍{ev.Latitudine.ToString().Replace(",", ".")}, {ev.Longitudine.ToString().Replace(",", ".")}\n📅{ev.DataOraInizio.ToString("dd/MM/yyyy")} - {(ev.DataOraFine.HasValue ? ev.DataOraFine.Value.ToString("dd/MM/yyyy") : "???")}\n\n<i>{ev.Descrizione}</i>");
+                                        break;
+                                }
+                            }
+                        }
+
+                        user.State = 1;
+                        user.ObjectState = null;
+                        GC.Collect();
+                        await StampaCreazioneEventoFine(text.From.Id, ev);
+                    }
+
+                    if (user.State == 301) //creapunto
+                    {
+                        //Ricevuto il nome
+                        if (user.ObjectState == null)
+                            user.ObjectState = new CreaPunto();
+                        else if (!(user.ObjectState is CreaPunto))
+                            user.ObjectState = new CreaPunto();
+
+                        var eventi = GetEventiDelResponsabile(text.From.Id);
+                        if (eventi.Count == 0)
+                        {
+                            //Non ha eventi assegnati
+                            await bot.SendTextMessageAsync(text.From.Id, "⚠️ Non ho trovato nessun evento");
+                            user.State = 1;
+                            return;
+                        }
+
+                        (user.ObjectState as CreaPunto).Nome = text.Text;
+                        user.State = 302;
+                        
+                    }
+                    else if (user.State == 303)
+                    {
+                        var idTelegram = 0;
+                        if ((idTelegram = IsUserTelefonoRegisteredInBot(text.Text)) != -1)
+                        {
+                            (user.ObjectState as CreaPunto).Volontari = new List<string>() { idTelegram.ToString() };
+                            user.State = 304;
+                            await StampaCreazionePuntoStep4(text.From.Id);
+                        }
+                        else
+                        {
+                            if ((idTelegram = IsUserMatricolaRegisteredInBot(text.Text)) != -1)
+                            {
+                                (user.ObjectState as CreaPunto).Volontari = new List<string>() { idTelegram.ToString() };
+                                user.State = 304;
+                                await StampaCreazionePuntoStep4(text.From.Id);
+                            }
+                            else
+                                await StampaUtenteNonDisponibile(text.From.Id);
+                        }
+                    }
+                    else if (user.State == 304)
+                    {
+                        CreaPunto punto = user.ObjectState as CreaPunto;
+                        punto.Aperto = (text.Text.ToLower().Contains("aperto") ? true : false);
+
+                    }
+                    else if (user.State == 305)
+                    {
+
                     }
                 }
             }
@@ -392,14 +504,30 @@ namespace CueBoT
             }
             else if(user.State == 207)
             {
-                if (IsUserTelefonoRegisteredInBot(numeroDiTelefono))
+                var idTelegram = 0;
+                if ((idTelegram = IsUserTelefonoRegisteredInBot(numeroDiTelefono)) != -1)
                 {
+                    (user.ObjectState as CreaEvento).Responsabili = new List<string>() { idTelegram.ToString() };
                     user.State = 208;
                     await StampaCreazioneEventoStep8(id);
                 }
                 else
                 {
-                    await StampaCreazioneEventoStep7Err(id);
+                    await StampaUtenteNonDisponibile(id);
+                }
+            }
+            else if (user.State == 303)
+            {
+                var idTelegram = 0;
+                if ((idTelegram = IsUserTelefonoRegisteredInBot(numeroDiTelefono)) != -1)
+                {
+                    (user.ObjectState as CreaPunto).Volontari = new List<string>() { idTelegram.ToString() };
+                    user.State = 304;
+                    await StampaCreazioneEventoStep8(id);
+                }
+                else
+                {
+                    await StampaUtenteNonDisponibile(id);
                 }
             }
             else
@@ -425,6 +553,14 @@ namespace CueBoT
                     (user.ObjectState as CreaEvento).Longitudine = location.Longitude;
                     user.State = 204;
                     await StampaCreazioneEventoStep4(id);
+                }
+
+                if (user.State == 302)
+                {
+                    (user.ObjectState as CreaPunto).Latitudine = location.Latitude;
+                    (user.ObjectState as CreaPunto).Longitudine = location.Longitude;
+                    user.State = 303;
+                    await StampaCreazionePuntoStep3(id);
                 }
             }
         }
@@ -493,7 +629,6 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
                 }
             }
         }
-
         private static bool IsEnabledCommand(string sql)
         {
             try
@@ -521,7 +656,6 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
 
             return false;
         }
-
         private static (string, int) GetNomeRegistrato(string sql)
         {
             try
@@ -567,7 +701,6 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
 
             return ("", -1); //Errore interno
         }
-
         private static int AuthLevel(string sql)
         {
             try
@@ -594,16 +727,19 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
             }
             return -1; //Return
         }
-
-        private static bool IsUserTelefonoRegisteredInBot(string tel)
+        private static int IsUserTelefonoRegisteredInBot(string tel)
         {
-            var sql = $"SELECT CASE WHEN EXISTS(SELECT * FROM Registrati WHERE tel = '{tel}' AND id_utente IS NOT NULL) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END";
+            var sql = $"SELECT id_utente FROM Registrati WHERE tel = '{tel}' AND id_utente IS NOT NULL";
             try
             {
                 using (var command = new SqliteCommand(sql, dbSqlite))
                 using (var reader = command.ExecuteReader())
-                    while (reader.Read())
-                        return reader.GetBoolean(0);
+                    if (reader.HasRows)
+                        while (reader.Read())
+                            return reader.GetInt32(0);
+                    else
+                        return -1;
+
             }
             catch (Exception ex)
             {
@@ -612,8 +748,11 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
                 {
                     using (var command = new SqliteCommand(sql, dbSqlite))
                     using (var reader = command.ExecuteReader())
-                        while (reader.Read())
-                            return reader.GetBoolean(0);
+                        if (reader.HasRows)
+                            while (reader.Read())
+                                return reader.GetInt32(0);
+                        else
+                            return -1;
                 }
                 catch (Exception ex2)
                 {
@@ -621,18 +760,20 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
                 }
             }
 
-            return false;
+            return -2;
         }
-
-        private static bool IsUserMatricolaRegisteredInBot(string matricola)
+        private static int IsUserMatricolaRegisteredInBot(string matricola)
         {
-            var sql = $"SELECT CASE WHEN EXISTS(SELECT * FROM Registrati WHERE matricola = '{matricola}' AND id_utente IS NOT NULL) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END";
+            var sql = $"SELECT id_utente FROM Registrati WHERE matricola = '{matricola}' AND id_utente IS NOT NULL";
             try
             {
                 using (var command = new SqliteCommand(sql, dbSqlite))
                 using (var reader = command.ExecuteReader())
-                    while (reader.Read())
-                        return reader.GetBoolean(0);
+                    if (reader.HasRows)
+                        while (reader.Read())
+                            return reader.GetInt32(0);
+                    else
+                        return -1;
             }
             catch (Exception ex)
             {
@@ -641,8 +782,11 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
                 {
                     using (var command = new SqliteCommand(sql, dbSqlite))
                     using (var reader = command.ExecuteReader())
-                        while (reader.Read())
-                            return reader.GetBoolean(0);
+                        if (reader.HasRows)
+                            while (reader.Read())
+                                return reader.GetInt32(0);
+                        else
+                            return -1;
                 }
                 catch (Exception ex2)
                 {
@@ -650,27 +794,175 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
                 }
             }
 
-            return false;
+            return -2;
         }
+        private static int GetLastRow(string sql)
+        {
+            try
+            {
+                using (var command = new SqliteCommand(sql, dbSqlite))
+                using (var reader = command.ExecuteReader())
+                    if (reader.HasRows)
+                        while (reader.Read())
+                            return reader.GetInt32(0);
+                    else
+                        return -1;
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Invio SQL Query fallito \"{sql}\", verrà eseguito un nuovo tentativo: {ex.Message}");
+                try
+                {
+                    using (var command = new SqliteCommand(sql, dbSqlite))
+                    using (var reader = command.ExecuteReader())
+                        if (reader.HasRows)
+                            while (reader.Read())
+                                return reader.GetInt32(0);
+                        else
+                            return -1;
+                }
+                catch (Exception ex2)
+                {
+                    Console.WriteLine($"Invio SQL Query fallito \"{sql}\" per la seconda volta. {ex2.Message}");
+                }
+            }
+
+            return -2;
+        }
+        static bool GetUtenteRegistrato(long id) => IsEnabledCommand($"SELECT CASE WHEN EXISTS (SELECT * FROM Utenti WHERE Utenti.id_utente = '{id}') THEN CAST (1 AS BIT) ELSE CAST (0 AS BIT) END");
+        static LivelloAuth GetLivelloAutorizzazione(long id) => (LivelloAuth)AuthLevel($"SELECT id_auth FROM Utenti, Registrati WHERE Utenti.id_utente = {id} AND Utenti.id_utente = Registrati.id_utente");
+        static List<KeyValuePair<int, LivelloAuth>> GetUtentiRegistrati()
+        {
+            var sql = $"SELECT Utenti.id_utente, id_auth FROM Utenti, Registrati WHERE Utenti.tel = Registrati.tel";
+            List<KeyValuePair<int, LivelloAuth>> listaUtenti = new List<KeyValuePair<int, LivelloAuth>>();
+            try
+            {
+                using (var command = new SqliteCommand(sql, dbSqlite))
+                using (var reader = command.ExecuteReader())
+                    while (reader.Read())
+                        listaUtenti.Add(new KeyValuePair<int, LivelloAuth>(reader.GetInt32(0), (LivelloAuth)reader.GetInt32(1)));
+                return listaUtenti;
+            }
+            catch (Exception ex)
+            {
+                listaUtenti.Clear();
+                Console.WriteLine($"Invio SQL Query fallito \"{sql}\", verrà eseguito un nuovo tentativo: {ex.Message}");
+                try
+                {
+                    using (var command = new SqliteCommand(sql, dbSqlite))
+                    using (var reader = command.ExecuteReader())
+                        while (reader.Read())
+                            listaUtenti.Add(new KeyValuePair<int, LivelloAuth>(reader.GetInt32(0), (LivelloAuth)reader.GetInt32(1)));
+                    return listaUtenti;
+                }
+                catch (Exception ex2)
+                {
+                    Console.WriteLine($"Invio SQL Query fallito \"{sql}\" per la seconda volta. {ex2.Message}");
+                }
+            }
+            return null; //Return
+        }
+
+        static List<Tuple<int, string, string>> GetEventiDelResponsabile(long id)
+        {
+            var sql = $"SELECT Eventi.id_evento, nome, descrizione FROM Eventi, (SELECT id_evento FROM EventiResp WHERE EventiResp.id_resp = {id}) AS EventiAssegnati WHERE Eventi.id_evento = EventiAssegnati.id_evento";
+            List<Tuple<int, string, string>> listaUtenti = new List<Tuple<int, string, string>>();
+            try
+            {
+                using (var command = new SqliteCommand(sql, dbSqlite))
+                using (var reader = command.ExecuteReader())
+                    while (reader.Read())
+                        listaUtenti.Add(new Tuple<int, string, string>(reader.GetInt32(0), reader.GetString(1), reader.GetString(2)));
+                return listaUtenti;
+            }
+            catch (Exception ex)
+            {
+                listaUtenti.Clear();
+                Console.WriteLine($"Invio SQL Query fallito \"{sql}\", verrà eseguito un nuovo tentativo: {ex.Message}");
+                try
+                {
+                    using (var command = new SqliteCommand(sql, dbSqlite))
+                    using (var reader = command.ExecuteReader())
+                        while (reader.Read())
+                            listaUtenti.Add(new Tuple<int, string, string>(reader.GetInt32(0), reader.GetString(1), reader.GetString(2)));
+                    return listaUtenti;
+                }
+                catch (Exception ex2)
+                {
+                    Console.WriteLine($"Invio SQL Query fallito \"{sql}\" per la seconda volta. {ex2.Message}");
+                }
+            }
+            return null; //Return
+        }
+        #endregion
+
+        #region BotSendText helper
+
+        #region Metodi Stampa Creazione Evento
+
+        static async Task StampaCreazioneEventoStep1(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP1, ParseMode.Html);
+        static async Task StampaCreazioneEventoStep2(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP2, ParseMode.Html);
+        static async Task StampaCreazioneEventoStep3(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP3, ParseMode.Html);
+        static async Task StampaCreazioneEventoStep4(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP4, ParseMode.Html);
+        static async Task StampaCreazioneEventoStep46Err(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP46ERR, ParseMode.Html);
+        static async Task StampaCreazioneEventoStep5(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP5,
+                               ParseMode.Html, true, false, 0, new ReplyKeyboardMarkup(new[] { new KeyboardButton("Si"), new KeyboardButton("No") }, false, false));
+        static async Task StampaCreazioneEventoStep6(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP6, ParseMode.Html, false, false, 0, new ReplyKeyboardRemove());
+        static async Task StampaCreazioneEventoStep7(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP7, ParseMode.Html);
+        static async Task StampaUtenteNonDisponibile(long id) => await bot.SendTextMessageAsync(id, MSG_UTENTE_NON_DISPONIBILE, ParseMode.Html);
+        static async Task StampaCreazioneEventoStep8(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP8,
+                               ParseMode.Html, true, false, 0, new ReplyKeyboardMarkup(new[] { new KeyboardButton("Si"), new KeyboardButton("No") }, false, false));
+        static async Task StampaCreazioneEventoFine(long id, CreaEvento ev) => await bot.SendTextMessageAsync(id,
+                               $"Ho creato l'evento, qui puoi trovare il riepilogo:\n\n{(ev.Privato ? "🔒" : "")}<b>{ev.Nome}</b>\n\n📍{ev.Latitudine.ToString().Replace(",", ".")}, {ev.Longitudine.ToString().Replace(",", ".")}\n📅{ev.DataOraInizio.ToString("dd/MM/yyyy")} - {(ev.DataOraFine.HasValue ? ev.DataOraFine.Value.ToString("dd/MM/yyyy") : "???")}\n\n<i>{ev.Descrizione}</i>", 
+                               ParseMode.Html, false, false, 0, new ReplyKeyboardRemove());
 
         #endregion
 
-        #region Simplifier
+        #region Stampa Creazione Punto
 
-        static async Task StampaCreazioneEventoStep1(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP1);
-        static async Task StampaCreazioneEventoStep2(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP2);
-        static async Task StampaCreazioneEventoStep3(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP3);
-        static async Task StampaCreazioneEventoStep4(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP4);
-        static async Task StampaCreazioneEventoStep46Err(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP46ERR);
-        static async Task StampaCreazioneEventoStep5(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP5,
-                               ParseMode.Default, true, false, 0, new ReplyKeyboardMarkup(new[] { new KeyboardButton("Si"), new KeyboardButton("No") }, false, true));
-        static async Task StampaCreazioneEventoStep6(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP6);
-        static async Task StampaCreazioneEventoStep7(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP7);
-        static async Task StampaCreazioneEventoStep7Err(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP7ERR);
-        static async Task StampaCreazioneEventoStep8(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_EVENTO_STEP8);
+        static async Task StampaCreazionePuntoStep1(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_PUNTO_STEP1, ParseMode.Html);
+        static async Task StampaCreazionePuntoStep2(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_PUNTO_STEP2, ParseMode.Html);
+        static async Task StampaCreazionePuntoStep3(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_PUNTO_STEP3, ParseMode.Html);
+        static async Task StampaCreazionePuntoStep4(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_PUNTO_STEP4, ParseMode.Html,
+                            true, false, 0, new ReplyKeyboardMarkup(new[] { new KeyboardButton("Chiuso"), new KeyboardButton("Aperto") }, false, false));
+
+        #endregion
+
         static async Task StampaErroreGenerico(long id) => await bot.SendTextMessageAsync(id, MSG_ERRORE_GENERICO);
-        static bool GetUtenteRegistrato(long id) => IsEnabledCommand($"SELECT CASE WHEN EXISTS (SELECT * FROM Utenti WHERE Utenti.id_utente = '{id}') THEN CAST (1 AS BIT) ELSE CAST (0 AS BIT) END");
-        static LivelloAuth GetLivelloAutorizzazione(long id) => (LivelloAuth)AuthLevel($"SELECT id_auth FROM Utenti, Registrati WHERE Utenti.id_utente = {id} AND Utenti.id_utente = Registrati.id_utente");
+
+        #endregion
+
+        #region BotHelper
+
+        static async Task Notifica(long id, string messaggio)
+        {
+            try
+            {
+                await bot.SendTextMessageAsync(id, messaggio, ParseMode.Html, true, false, 0,
+                   new InlineKeyboardMarkup(new InlineKeyboardButton[] {new InlineKeyboardButton()
+                   { Text="Mi interessa!", CallbackData = "Interessato"}}));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Errore: " + ex.Message);
+                //Il bot è stato bloccato male
+            }
+        }
+
+        static async Task NotificaResp(long id, string messaggio)
+        {
+            try
+            {
+                await bot.SendTextMessageAsync(id, messaggio, ParseMode.Html, true, false, 0);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Errore: " + ex.Message);
+                //Il bot è stato bloccato male
+            }
+        }
+
         #endregion
     }
 
@@ -691,15 +983,4 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
         Utente = 5
     }
 
-    public class CreaEvento
-    {
-        public string Nome { get; set; }
-        public string Descrizione { get; set; }
-        public float Latitudine { get; set; }
-        public float Longitudine { get; set; }
-        public DateTime DataOraInizio { get; set; }
-        public DateTime? DataOraFine { get; set; }
-        public List<string> Responsabili { get; set; }
-        public bool Privato { get; set; }
-    }
 }

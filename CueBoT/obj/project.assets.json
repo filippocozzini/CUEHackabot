@@ -5383,11 +5383,11 @@
       "hideWarningsAndErrors": true
     },
     "restore": {
-      "projectUniqueName": "c:\\users\\adelt\\source\\repos\\CueBoT\\CueBoT\\CueBoT.csproj",
+      "projectUniqueName": "C:\\Users\\ADelt\\Documents\\GitHub\\CUEHackabot\\CueBoT\\CueBoT.csproj",
       "projectName": "CueBoT",
-      "projectPath": "c:\\users\\adelt\\source\\repos\\CueBoT\\CueBoT\\CueBoT.csproj",
+      "projectPath": "C:\\Users\\ADelt\\Documents\\GitHub\\CUEHackabot\\CueBoT\\CueBoT.csproj",
       "packagesPath": "C:\\Users\\ADelt\\.nuget\\packages\\",
-      "outputPath": "c:\\users\\adelt\\source\\repos\\CueBoT\\CueBoT\\obj\\",
+      "outputPath": "C:\\Users\\ADelt\\Documents\\GitHub\\CUEHackabot\\CueBoT\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

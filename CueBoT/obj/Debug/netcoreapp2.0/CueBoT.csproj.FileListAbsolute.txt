@@ -9,3 +9,14 @@ c:\users\adelt\source\repos\CueBoT\CueBoT\obj\Debug\netcoreapp2.0\CueBoT.Assembl
 c:\users\adelt\source\repos\CueBoT\CueBoT\obj\Debug\netcoreapp2.0\CueBoT.AssemblyInfo.cs
 c:\users\adelt\source\repos\CueBoT\CueBoT\obj\Debug\netcoreapp2.0\CueBoT.dll
 c:\users\adelt\source\repos\CueBoT\CueBoT\obj\Debug\netcoreapp2.0\CueBoT.pdb
+C:\Users\ADelt\Documents\GitHub\CUEHackabot\CueBoT\bin\Debug\netcoreapp2.0\CueBoT.deps.json
+C:\Users\ADelt\Documents\GitHub\CUEHackabot\CueBoT\bin\Debug\netcoreapp2.0\CueBoT.runtimeconfig.json
+C:\Users\ADelt\Documents\GitHub\CUEHackabot\CueBoT\bin\Debug\netcoreapp2.0\CueBoT.runtimeconfig.dev.json
+C:\Users\ADelt\Documents\GitHub\CUEHackabot\CueBoT\bin\Debug\netcoreapp2.0\CueBoT.dll
+C:\Users\ADelt\Documents\GitHub\CUEHackabot\CueBoT\bin\Debug\netcoreapp2.0\CueBoT.pdb
+C:\Users\ADelt\Documents\GitHub\CUEHackabot\CueBoT\obj\Debug\netcoreapp2.0\CueBoT.csprojResolveAssemblyReference.cache
+C:\Users\ADelt\Documents\GitHub\CUEHackabot\CueBoT\obj\Debug\netcoreapp2.0\CueBoT.csproj.CoreCompileInputs.cache
+C:\Users\ADelt\Documents\GitHub\CUEHackabot\CueBoT\obj\Debug\netcoreapp2.0\CueBoT.AssemblyInfoInputs.cache
+C:\Users\ADelt\Documents\GitHub\CUEHackabot\CueBoT\obj\Debug\netcoreapp2.0\CueBoT.AssemblyInfo.cs
+C:\Users\ADelt\Documents\GitHub\CUEHackabot\CueBoT\obj\Debug\netcoreapp2.0\CueBoT.dll
+C:\Users\ADelt\Documents\GitHub\CUEHackabot\CueBoT\obj\Debug\netcoreapp2.0\CueBoT.pdb

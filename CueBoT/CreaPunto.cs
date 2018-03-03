@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace CueBoT
 {
@@ -9,5 +10,6 @@ namespace CueBoT
         public float Longitudine { get; set; }
         public List<string> Volontari { get; set; }
         public bool Aperto { get; set; } //Se il punto di controllo è aperto true altrimento false
+        public List<Tuple<int, string, string>> EventiAssegnati { get; set; }
     }
 }

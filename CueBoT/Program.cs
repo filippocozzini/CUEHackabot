@@ -35,7 +35,6 @@ namespace CueBoT
         const string MSG_CREAZIONE_PUNTO_STEP2 = "Perfetto, allegami la <b>posizione</b> del punto";
         const string MSG_CREAZIONE_PUNTO_STEP3 = "Bravo! Adesso ho bisogno che imposti un <b>volontario</b> da assegnare al punto:\n<i>(inviamelo come contatto o scrivimi la sua matricola)</i>";
         const string MSG_CREAZIONE_PUNTO_STEP4 = "Ora, vuoi rendere questo punto inizialmente <b>chiuso o aperto</b>?\n<i>(potrai successivamente fornire istruzioni al volontario se aprirlo o chiuderlo)</i>";
-        const string MSG_CREAZIONE_PUNTO_STEP5 = "Sei responsabile di <b>più eventi</b> perciò per favore seleziona l'evento al quale vuoi aggiungere il punto";
 
         static SqliteConnection dbSqlite;
         static List<Stato> stati;
@@ -249,13 +248,47 @@ namespace CueBoT
                             await StampaCreazioneEventoStep1(text.From.Id);
                             return;
                         case LivelloAuth.Responsabile:
-                            user.State = 301;
-                            await StampaCreazionePuntoStep1(text.From.Id);
                             return;
                         default:
                             await StampaErroreGenerico(text.From.Id);
                             return;
                     }
+                }
+                else if (text.Text.ToLower().StartsWith("/creapunto"))
+                {
+                    var user = stati.Find(a => a.UserId == text.From.Id);
+                    if (user == null) //Non in lista
+                    {
+                        stati.Add(new Stato { UserId = text.From.Id, State = 1 });
+                        user = stati[stati.Count - 1];
+                    }
+
+                    var livelloAutorizzazione = GetLivelloAutorizzazione(text.From.Id);
+
+                    switch (livelloAutorizzazione)
+                    {
+                        case LivelloAuth.Volontario:
+                            user.ObjectState = new CreaPunto();
+                            (user.ObjectState as CreaPunto).EventiAssegnati = GetEventiDelResponsabile(text.From.Id);
+                            user.State = 301;
+
+                            if ((user.ObjectState as CreaPunto).EventiAssegnati.Count == 0)
+                            {
+                                //Non ha eventi assegnati
+                                await bot.SendTextMessageAsync(text.From.Id, "⚠️ Non ho trovato nessun evento");
+                                user.State = 1;
+                                user.ObjectState = null;
+                                return;
+                            }
+
+                            await StampaCreazionePuntoStep1(text.From.Id);
+                            break;
+                        case LivelloAuth.Utente:
+                            break;
+                        default:
+                            break;
+                    }
+
                 }
             }
             else
@@ -393,23 +426,9 @@ namespace CueBoT
                     if (user.State == 301) //creapunto
                     {
                         //Ricevuto il nome
-                        if (user.ObjectState == null)
-                            user.ObjectState = new CreaPunto();
-                        else if (!(user.ObjectState is CreaPunto))
-                            user.ObjectState = new CreaPunto();
-
-                        var eventi = GetEventiDelResponsabile(text.From.Id);
-                        if (eventi.Count == 0)
-                        {
-                            //Non ha eventi assegnati
-                            await bot.SendTextMessageAsync(text.From.Id, "⚠️ Non ho trovato nessun evento");
-                            user.State = 1;
-                            return;
-                        }
-
                         (user.ObjectState as CreaPunto).Nome = text.Text;
                         user.State = 302;
-                        
+                        await StampaCreazionePuntoStep2(text.From.Id);
                     }
                     else if (user.State == 303)
                     {
@@ -436,11 +455,22 @@ namespace CueBoT
                     {
                         CreaPunto punto = user.ObjectState as CreaPunto;
                         punto.Aperto = (text.Text.ToLower().Contains("aperto") ? true : false);
-
-                    }
-                    else if (user.State == 305)
-                    {
-
+                        if (punto.EventiAssegnati.Count > 1)
+                        {
+                            user.State = 305;
+                            await StampaCreazionePuntoStep5(text.From.Id, punto.EventiAssegnati);
+                        }
+                        else
+                        {
+                            var oggetto = (user.ObjectState as CreaPunto);
+                            var elemento = oggetto.EventiAssegnati[0];
+                            RunCommand($"INSERT INTO EventiVolontari VALUES (\"{elemento.Item1}\", \"{oggetto.Volontari[0]}\", \"{text.From.Id}\", \"{oggetto.Latitudine}\", \"{oggetto.Longitudine}\", \"{oggetto.Aperto}\");");
+                            await bot.SendTextMessageAsync(text.From.Id, $"Ho aggiunto il punto di controllo, qui puoi trovare il riepilogo:\n\n<b>{oggetto.Nome}</b>\n\n📍{oggetto.Latitudine.ToString().Replace(",", ".")}, {oggetto.Longitudine.ToString().Replace(",", ".")}\n{(oggetto.Aperto ? "🔓 Aperto" : "🔒 Chiuso")}\n\n<i>L'utente assegnato riceverà un notifica per informarlo</i>", ParseMode.Html);
+                            user.State = 1; //OKKKK
+                            user.ObjectState = null;
+                            GC.Collect();
+                            return;
+                        }
                     }
                 }
             }
@@ -523,7 +553,7 @@ namespace CueBoT
                 {
                     (user.ObjectState as CreaPunto).Volontari = new List<string>() { idTelegram.ToString() };
                     user.State = 304;
-                    await StampaCreazioneEventoStep8(id);
+                    await StampaCreazionePuntoStep4(id);
                 }
                 else
                 {
@@ -570,16 +600,31 @@ namespace CueBoT
 
         private static async Task HandleCallbackQuery(CallbackQuery callback)
         {
-            if (callback.Data == "DONE")
+            var user = stati.Find(a => a.UserId == callback.From.Id);
+
+            if (user == null) //Agli inizi
             {
-                //await bot.SendTextMessageAsync(callback.From.Id, $"Callback OK");
-                try
+                return;
+            }
+
+            if (user.State == 305)
+            {
+                if (int.TryParse(callback.Data, out int valore))
                 {
-                    await bot.AnswerCallbackQueryAsync(callback.Id, "PROVA", false);
+                    await StampaCreazionePuntoStep5(callback.From.Id, (user.ObjectState as CreaPunto).EventiAssegnati, valore, true, callback.Message.MessageId);
                 }
-                catch (Exception ex)
+                else
                 {
-                    Console.WriteLine($"ERRORE: {ex.Message}");
+                    //TODO: messaggio da fare per conferma evento
+                    int pos = int.Parse(callback.Data.Split('-')[1]);
+                    var oggetto = (user.ObjectState as CreaPunto);
+                    var elemento = oggetto.EventiAssegnati[pos];
+                    RunCommand($"INSERT INTO EventiVolontari VALUES (\"{elemento.Item1}\", \"{oggetto.Volontari[0]}\", \"{callback.From.Id}\", \"{oggetto.Latitudine}\", \"{oggetto.Longitudine}\", \"{oggetto.Aperto}\");");
+                    await bot.SendTextMessageAsync(callback.From.Id,$"Ho aggiunto il punto di controllo, qui puoi trovare il riepilogo:\n\n<b>{oggetto.Nome}</b>\n\n📍{oggetto.Latitudine.ToString().Replace(",",".")}, {oggetto.Longitudine.ToString().Replace(",",".")}\n{(oggetto.Aperto ? "🔓 Aperto" : "🔒 Chiuso")}\n\n<i>L'utente assegnato riceverà un notifica per informarlo</i>", ParseMode.Html);
+                    user.State = 1; //OKKKK
+                    user.ObjectState = null;
+                    GC.Collect();
+                    return;
                 }
             }
         }
@@ -926,6 +971,43 @@ CREATE TABLE IF NOT EXISTS Registrati (tel varchar(15) NOT NULL, id_utente INTEG
         static async Task StampaCreazionePuntoStep3(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_PUNTO_STEP3, ParseMode.Html);
         static async Task StampaCreazionePuntoStep4(long id) => await bot.SendTextMessageAsync(id, MSG_CREAZIONE_PUNTO_STEP4, ParseMode.Html,
                             true, false, 0, new ReplyKeyboardMarkup(new[] { new KeyboardButton("Chiuso"), new KeyboardButton("Aperto") }, false, false));
+
+        static async Task StampaCreazionePuntoStep5(long id, List<Tuple<int, string, string>> list, int pos = 0, bool edit = false, int messageId = 0)
+        {
+
+            var inlineKeyboard = new List<InlineKeyboardButton>();
+            if (pos == 0)
+            {
+                inlineKeyboard.Add(new InlineKeyboardButton() { Text = "Seleziona", CallbackData = $"SelezionaEvento-{pos}" });
+                inlineKeyboard.Add(new InlineKeyboardButton() { Text = "Successivo ➡️", CallbackData = $"{pos + 1}" });
+            }
+            else if (pos == list.Count - 1)
+            {
+                inlineKeyboard.Add(new InlineKeyboardButton() { Text = "⬅️ Precedente", CallbackData = $"{pos - 1}" });
+                inlineKeyboard.Add(new InlineKeyboardButton() { Text = "Seleziona", CallbackData = $"SelezionaEvento-{pos}" });
+            }
+            else
+            {
+                inlineKeyboard.Add(new InlineKeyboardButton() { Text = "⬅️ Precedente", CallbackData = $"{pos - 1}" });
+                inlineKeyboard.Add(new InlineKeyboardButton() { Text = "Seleziona", CallbackData = $"SelezionaEvento-{pos}" });
+                inlineKeyboard.Add(new InlineKeyboardButton() { Text = "Successivo ➡️", CallbackData = $"{pos + 1}" });
+            }
+
+
+            try
+            {
+                if (edit)
+                    await bot.EditMessageTextAsync(id, messageId, $"Ho trovato più eventi relativi al tuo account, per favore scegli un evento\n\n<b>{list[pos].Item2}</b>\n<i>{list[pos].Item3}</i>\n\nEvento {pos + 1} di {list.Count}",
+                       ParseMode.Html, true, new InlineKeyboardMarkup(inlineKeyboard));
+                else
+                    await bot.SendTextMessageAsync(id, $"Ho trovato più eventi relativi al tuo account, per favore scegli un evento\n\n<b>{list[pos].Item2}</b>\n<i>{list[pos].Item3}</i>\n\nEvento {pos + 1} di {list.Count}",
+                       ParseMode.Html, true, false, 0, new InlineKeyboardMarkup(inlineKeyboard));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Errore: " + ex.Message);
+            }
+        }
 
         #endregion
 
